@@ -271,12 +271,12 @@ public:
 };
 /****************************************************************
  *
- * CLASS Player
+ * CLASS Character
  *
  * Base class for player and enemy classes
  *
  * **************************************************************/
-Player* Character = nullptr; //Player object as nullptr
+Player* player1 = nullptr; //Character object as nullptr
 
 class Character {										//Base class for players and enemies
 protected:
@@ -361,7 +361,7 @@ public:
 	}
 };
 
-class Player : public Character {					//HumanPlayer, class derived from Player
+class Player : public Character {					//HumanPlayer, class derived from Character
 protected:
 private:
 	int battery;
@@ -726,8 +726,8 @@ int read_input(char* input)
  * **************************************************************/
 void update_state(char input)
 {
-	int newX = Character->X;
-	int newY = Character->Y;
+	int newX = player1->X;
+	int newY = player1->Y;
 	int dy = 0;								//Variable for lightning function
 	int dx = 0;								//Variable for lightning function
 
@@ -754,8 +754,8 @@ void update_state(char input)
 		break;
 	case 'r': 
 		Restart();							//Restart game
-		newX = Character->X;
-		newY = Character->Y;
+		newX = player1->X;
+		newY = player1->Y;
 		break;
 	case 'i': dy = -1;						//Lightning function
 		break;
@@ -769,7 +769,7 @@ void update_state(char input)
 		return;
 	}
 	
-	if (newX != Character->X || newY != Character->Y)				//If player is trying to move
+	if (newX != player1->X || newY != player1->Y)				//If player is trying to move
 	{
 		if (newX >= 0 && newX < map_cols && newY >= 0 && newY < map_rows)
 		{
@@ -777,7 +777,7 @@ void update_state(char input)
 			if (go)
 			{
 				//Player can and will move
-				Character->move(newX, newY);					//Move player
+				player1->move(newX, newY);					//Move player
 /*
 				world->map[player->Y][player->X] = 'o';		//Update old position to free pos
 				player->X = newX;
@@ -791,7 +791,7 @@ void update_state(char input)
 				world->affectDamage({ newX, newY });		//Check what is in position, affect damage to who is at position
 				cout << "Inflicted damage!" << endl;
 			}
-			Character->oxygen_decrease(2);						//Oxygen decrease by 2 on moving
+			player1->oxygen_decrease(2);						//Oxygen decrease by 2 on moving
 		}
 		else
 		{
@@ -801,7 +801,7 @@ void update_state(char input)
 	}
 	if (dy != 0 || dx != 0)									//Player is using flashlight function
 	{
-		Character->flashlight(dx, dy);							//Player use flashlight
+		player1->flashlight(dx, dy);							//Player use flashlight
 //		world->expandMask(dx, dy);							//Expand discovered mask
 
 		vector<int> enemyPos = world->getPosOnMap('M');		//Get enemy position
@@ -816,9 +816,9 @@ void Restart()
 	//Reload level
 	world->loadWorld();
 //	map = load_level(filepath, map_rows, map_cols);
-	Character->health = MAX_HEALTH;
-	Character->oxygen = MAX_OXYGEN;
-	Character->lives = INIT_LIVES;
+	player1->health = MAX_HEALTH;
+	player1->oxygen = MAX_OXYGEN;
+	player1->lives = INIT_LIVES;
 }
 
 void Information()
@@ -848,7 +848,7 @@ void Information()
  * **************************************************************/
 void render_screen(void)
 {
-	Character->print_info();				//Print player info
+	player1->print_info();				//Print player info
 	world->printLevel(map_rows, map_cols);
 }
 
@@ -880,7 +880,7 @@ void start_splash_screen(void)
 void startup_routines(void)
 {
 	world = new World(); 	//World object 
-	Character = new Player(0, 0); //Player object with default values
+	player1 = new Player(0, 0); //Player object with default values
 	enemyStat = new EnemyStat(0, 0); //Enemy object with default values
 	enemyMov = new EnemyMov(0, 0); //Enemy object with default values
 	// For example if memory allocated here... (*)
@@ -896,10 +896,10 @@ void GameOver()
 void destroyObjects()
 {
 	//Free player object
-	if (Character)
+	if (player1)
 	{
-		delete Character;
-		Character = nullptr;
+		delete player1;
+		player1 = nullptr;
 	}
 	if (enemyStat)
 	{
