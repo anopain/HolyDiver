@@ -35,6 +35,7 @@ void GameOver(void);	//Game over status
 
 class World;
 class Character;
+class Player;
 class EnemyStat;
 class EnemyMov;
 
@@ -275,9 +276,9 @@ public:
  * Base class for player and enemy classes
  *
  * **************************************************************/
-Character* player = nullptr; //Player object as nullptr
+Player* Character = nullptr; //Player object as nullptr
 
-class Player {										//Base class for players and enemies
+class Character {										//Base class for players and enemies
 protected:
 private:
 public:
@@ -287,7 +288,7 @@ public:
 	int X;
 	int Y;
 
-	Player(int x, int y)
+	Character(int x, int y)
 	{
 		health = MAX_HEALTH;
 		oxygen = MAX_OXYGEN;
@@ -354,18 +355,18 @@ public:
 		pos.push_back(Y);
 		return pos;
 	}
-	~Player()
+	~Character()
 	{
 
 	}
 };
 
-class Character : public Player {					//HumanPlayer, class derived from Player
+class Player : public Character {					//HumanPlayer, class derived from Player
 protected:
 private:
 	int battery;
 public:
-	Character(int x, int y) : Player(x, y)
+	Player(int x, int y) : Character(x, y)
 	{
 		battery = MAX_BATTERY;
 	}
@@ -432,7 +433,7 @@ public:
 		health_decrease(amount);
 		cout << "You took damage!" << endl;
 	}
-	~Character()
+	~Player()
 	{
 		cout << "Player is DEAD now! RIP!!!" << endl;
 		gameOver = -3;										//Game over status
@@ -441,12 +442,12 @@ public:
 
 EnemyStat* enemyStat = nullptr;								//Enemy object as nullptr
 
-class EnemyStat : public Player {							//Marked as 'm'		Static enemy class derived from Player
+class EnemyStat : public Character {							//Marked as 'm'		Static enemy class derived from Player
 protected:
 
 private:
 public:
-	EnemyStat(int x, int y) : Player(x, y)
+	EnemyStat(int x, int y) : Character(x, y)
 	{
 		vector<int> ePos = world->randEnemy('m');			//Randomize enemy position
 		if (ePos[0] == -1 || ePos[1] == -1)
@@ -478,13 +479,13 @@ public:
 
 EnemyMov* enemyMov = nullptr;								//Enemy object as nullptr
 
-class EnemyMov : public Player {							//Marked as 'M'		//Moving enemy class derived from Player
+class EnemyMov : public Character {							//Marked as 'M'		//Moving enemy class derived from Player
 protected:
 
 private:
 	bool active = false;									//Enemy status
 public:
-	EnemyMov(int x, int y) : Player(x, y)
+	EnemyMov(int x, int y) : Character(x, y)
 	{
 		vector<int> ePos = world->randEnemy('M');			//Randomize enemy position
 		if (ePos[0] == -1 || ePos[1] == -1)
@@ -725,8 +726,8 @@ int read_input(char* input)
  * **************************************************************/
 void update_state(char input)
 {
-	int newX = player->X;
-	int newY = player->Y;
+	int newX = Character->X;
+	int newY = Character->Y;
 	int dy = 0;								//Variable for lightning function
 	int dx = 0;								//Variable for lightning function
 
@@ -753,8 +754,8 @@ void update_state(char input)
 		break;
 	case 'r': 
 		Restart();							//Restart game
-		newX = player->X;
-		newY = player->Y;
+		newX = Character->X;
+		newY = Character->Y;
 		break;
 	case 'i': dy = -1;						//Lightning function
 		break;
@@ -768,7 +769,7 @@ void update_state(char input)
 		return;
 	}
 	
-	if (newX != player->X || newY != player->Y)				//If player is trying to move
+	if (newX != Character->X || newY != Character->Y)				//If player is trying to move
 	{
 		if (newX >= 0 && newX < map_cols && newY >= 0 && newY < map_rows)
 		{
@@ -776,7 +777,7 @@ void update_state(char input)
 			if (go)
 			{
 				//Player can and will move
-				player->move(newX, newY);					//Move player
+				Character->move(newX, newY);					//Move player
 /*
 				world->map[player->Y][player->X] = 'o';		//Update old position to free pos
 				player->X = newX;
@@ -790,7 +791,7 @@ void update_state(char input)
 				world->affectDamage({ newX, newY });		//Check what is in position, affect damage to who is at position
 				cout << "Inflicted damage!" << endl;
 			}
-			player->oxygen_decrease(2);						//Oxygen decrease by 2 on moving
+			Character->oxygen_decrease(2);						//Oxygen decrease by 2 on moving
 		}
 		else
 		{
@@ -800,7 +801,7 @@ void update_state(char input)
 	}
 	if (dy != 0 || dx != 0)									//Player is using flashlight function
 	{
-		player->flashlight(dx, dy);							//Player use flashlight
+		Character->flashlight(dx, dy);							//Player use flashlight
 //		world->expandMask(dx, dy);							//Expand discovered mask
 
 		vector<int> enemyPos = world->getPosOnMap('M');		//Get enemy position
@@ -815,9 +816,9 @@ void Restart()
 	//Reload level
 	world->loadWorld();
 //	map = load_level(filepath, map_rows, map_cols);
-	player->health = MAX_HEALTH;
-	player->oxygen = MAX_OXYGEN;
-	player->lives = INIT_LIVES;
+	Character->health = MAX_HEALTH;
+	Character->oxygen = MAX_OXYGEN;
+	Character->lives = INIT_LIVES;
 }
 
 void Information()
@@ -847,7 +848,7 @@ void Information()
  * **************************************************************/
 void render_screen(void)
 {
-	player->print_info();				//Print player info
+	Character->print_info();				//Print player info
 	world->printLevel(map_rows, map_cols);
 }
 
@@ -879,7 +880,7 @@ void start_splash_screen(void)
 void startup_routines(void)
 {
 	world = new World(); 	//World object 
-	player = new Character(0, 0); //Player object with default values
+	Character = new Player(0, 0); //Player object with default values
 	enemyStat = new EnemyStat(0, 0); //Enemy object with default values
 	enemyMov = new EnemyMov(0, 0); //Enemy object with default values
 	// For example if memory allocated here... (*)
@@ -895,10 +896,10 @@ void GameOver()
 void destroyObjects()
 {
 	//Free player object
-	if (player)
+	if (Character)
 	{
-		delete player;
-		player = nullptr;
+		delete Character;
+		Character = nullptr;
 	}
 	if (enemyStat)
 	{
