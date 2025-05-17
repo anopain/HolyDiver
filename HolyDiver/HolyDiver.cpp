@@ -1,10 +1,10 @@
+
 /*
 *
 * Holy diver - an epic adventure at object-oriented world way beneath the surface!
 * Template code for implementing the rich features to be specified later on.
 *
 */
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,8 +48,6 @@ class EnemyMov;
 //	    char map[MAXSTR][MAXLEN] = {{0}}; // declare a static 2-dim array of chars, initialize to zero
 // However pointer to pointer has not allocated memory yet attached to it, this is done dynamically when actual size known
 
-
-
 int map_rows = 0;
 int map_cols = 0;
 
@@ -60,215 +58,45 @@ const int MAX_OXYGEN = 100;
 const int MAX_BATTERY = 100;
 const int INIT_LIVES = 3;
 
-World* world = nullptr;								//World object as nullptr
+/****************************************************************
+ *
+ * CLASS World
+ *
+ * Class for world actions
+ *
+ * **************************************************************/
 
 class World {										//Class for world actions
 protected:
 private:
 	int map_rows = 0;
 	int map_cols = 0;
+	vector<Character*> characters;					//Store characters in vector
 
 public:
 	char** map;										//Pointer to map
 	bool** discoveredMask;							//Pointer to discovered mask
 
-	World()
-	{
-		loadWorld();
-		discoveredMask = getMask();
-	}
-	void printWorld()
-	{
-		cout << "World info: " << endl;
-		cout << "Map size: [" << map_rows << "," << map_cols << "]" << endl;
-	}
-	void loadWorld()
-	{
-		map = load_level(map_rows, map_cols);
-	}
-	vector<int> randEnemy(char chr)					//Get player position as vector
-	{
-		random_device erd;							//Create enemy random device generator
-		mt19937 gen(erd());						
-		uniform_int_distribution<int> distX(0, map_cols - 1);	//Set distribution for X position
-		uniform_int_distribution<int> distY(0, map_rows - 1);	//Set distribution for Y position
-
-		int c = 0;
-		while (c < 50)								//Try 50 times find empty position
-		{
-			int x = distX(gen);						//Randomize X position
-			int y = distY(gen);						//Randomize Y position
-			if (map[y][x] == 'o')					//If empty space found
-			{
-				map[y][x] = chr;					//Set enemy to the map
-				vector<int> pos;
-				pos.push_back(x);
-				pos.push_back(y);
-				return pos;
-			}
-			c++;
-		}
-		vector<int> zeroVector = { -1, -1 };		//Return -1,-1 if not found	
-		return zeroVector;
-	}
-
-	vector<int> getPosOnMap(char chr)				//Get player position as vector
-	{
-		for (int i = 0; i < map_rows; ++i)
-		{
-			for (int j = 0; j < map_cols; ++j)
-			{
-				if (map[i][j] == chr)				//Find player position
-				{
-					vector<int> pos;
-					pos.push_back(j);
-					pos.push_back(i);
-					return pos;
-				}
-			}
-		}
-		vector<int> zeroVector = {-1, -1};			//Return -1,-1 if not found	
-		return zeroVector;
-	}
-
-	bool canMove(vector<int> pos)						//Check if player can move to new position
-	{
-		if (pos[0] < 0 || pos[0] >= map_cols || pos[1] < 0 || pos[1] >= map_rows) return false;	//Check if within map boundaries
-		if (map[pos[1]][pos[0]] == 'x') return false;	//Check if wall element
-		if (map[pos[1]][pos[0]] == 'm')					//Check if enemy 'm' element
-		{
-			discoveredMask[pos[1]][pos[0]] = true;		//Set discovered mask to true for enemy position
-			return false;								
-		}
-		if (map[pos[1]][pos[0]] == 'M')					//Check if enemy 'M' element
-		{
-			discoveredMask[pos[1]][pos[0]] = true;		//Set discovered mask to true for enemy position
-			return false;	
-		}
-
-		if (map[pos[1]][pos[0]] == 'P') return false;	//Check if player element
-
-		return true;
-	}
-
-	vector<int> affectDamage(vector<int> pos)		//Check what is in position, affect damage to who is at position
-	{
-		vector<int> damageTo;
-		if (map[pos[1]][pos[0]] == 'm')				//If enemy 'm' found
-		{
-//			enemyStat->giveDamage();				//Give damage to enemy		***Not working for some reason***
-			damageTo = pos;
-			return damageTo;
-		}
-		else if (map[pos[1]][pos[0]] == 'M')		//If enemy 'M' found
-		{
-//			enemyMov->giveDamage();					//Give damage to enemy			***Not working for some reason***
-			damageTo = pos;
-			return damageTo;
-		}
-		else if (map[pos[1]][pos[0]] == 'P')		//If player found
-		{
-//			player->takeDamage(10);					//Give damage to player			***Not working for some reason***
-			damageTo = pos;
-			return damageTo;
-		}
-	}
-
-	void freeLevel(int rows)						//*************Fix this to use map_rows !!!!!!******************??????	
-	{
-		if (!map) return;
-		for (int i = 0; i < rows; ++i)
-		{
-			delete[] map[i];
-		}
-		delete[] map;
-
-		if (!discoveredMask) return;
-		for (int i = 0; i < rows; ++i)
-		{
-			delete[] discoveredMask[i];
-		}
-		delete[] discoveredMask;
-	}
-
-	void printLevel(int rows, int cols)
-	{
-		if (!map || !discoveredMask) return;
-		//		for (int i = 0; i < rows; ++i)
-		for (int i = 0; i < map_rows; ++i)			//Print map
-		{
-			for (int j = 0; j < map_cols; ++j)
-			{
-				if (discoveredMask[i][j])
-				{
-					cout << map[i][j];				//Print discovered elements
-				}
-				else
-				{
-					cout << ' ';					//Print undiscovered elements
-				}
-			}
-			cout << endl;
-		}
-
-	}
-	bool** getMask()
-	{
-		discoveredMask = new bool* [map_rows];									
-		for (int i = 0; i < map_rows; ++i)								//Initialize shadowMap
-		{
-			discoveredMask[i] = new bool[map_cols];
-			for (int j = 0; j < map_cols; ++j)
-			{
-				discoveredMask[i][j] = false;							//Initialize all values to false
-//				discoveredMask[i][j] = true;				//***FOR DEBUGGING->MAP VISIBLE***//
-			}
-		}
-
-		for (int i = 0; i < map_rows; ++i)								//Initialize discoveredMask
-		{
-			for (int j = 0; j < map_cols; ++j)
-			{
-				if (map[i][j] == 'x') discoveredMask[i][j] = true;		//Set wall elements to true
-			}
-		}
-		vector<int> pPos = getPosOnMap('P');							//Get player position
-		if (pPos[0] == -1 || pPos[1] == -1)
-		{
-			cout << "Player location returned negative value!" << endl;
-			return nullptr;
-		}
-		else
-		{
-			discoveredMask[pPos[1]][pPos[0]] = true;					//Set player position to true
-		}
-
-		return discoveredMask;
-	}
-	void expandMask(int x = 0, int y = 0)
-	{
-		vector<int> pPos = getPosOnMap('P');									//Get player position
-		x += pPos[0];															//Add player position to x if flashlight is used
-		y += pPos[1];															//Add player position to y if flashlight is used
-
-		if (x < 0 || x >= map_cols || y < 0 || y >= map_rows) return;			//Check if within map boundaries
-
-		discoveredMask[y][x] = true;											//Light next char
-	}
-	~World()
-	{
-		if (map) freeLevel(map_rows);									//Free map memory
-		if (discoveredMask)												//Free discovered mask memory
-		{
-			for (int i = 0; i < map_rows; ++i)
-			{
-				delete[] discoveredMask[i];
-			}
-			delete[] discoveredMask;
-		}
-		cout << "World is destroyed!" << endl;
-	}
+	void addCharacter(Character* character);			//Add character to vector
+	Character* getCharacter(int x, int y);			//Get character from vector
+	World();
+	void printWorld();
+	void loadWorld();
+	vector<int> randEnemy(char chr);					//Get player position as vector
+	vector<int> getPosOnMap(char chr);				//Get player position as vector
+	bool canMove(vector<int> pos);						//Check if player can move to new position
+	vector<int> affectDamage(vector<int> pos);		//Check what is in position, affect damage to who is at position
+	void freeLevel(int rows);						//*************Fix this to use map_rows !!!!!!******************??????	
+	void printLevel(int rows, int cols);
+	bool** getMask();
+	void expandMask(int x, int y);
+	~World();
 };
+
+
+
+World* world = nullptr; // Global pointer definition
+
 /****************************************************************
  *
  * CLASS Character
@@ -288,22 +116,13 @@ public:
 	int X;
 	int Y;
 
+	virtual ~Character() {}
+
 	Character(int x, int y)
 	{
 		health = MAX_HEALTH;
 		oxygen = MAX_OXYGEN;
 		lives = INIT_LIVES;
-		vector<int> tmp = world->getPosOnMap('P');	//Get player position from map
-		if (tmp.size() > 0)
-		{
-			X = tmp[0];
-			Y = tmp[1];
-		}
-		else
-		{
-			X = 0;
-			Y = 0;
-		}
 	}
 	virtual void move(int x = 0, int y = 0)			//Move
 	{
@@ -355,10 +174,6 @@ public:
 		pos.push_back(Y);
 		return pos;
 	}
-	~Character()
-	{
-
-	}
 };
 
 class Player : public Character {					//HumanPlayer, class derived from Character
@@ -369,6 +184,19 @@ public:
 	Player(int x, int y) : Character(x, y)
 	{
 		battery = MAX_BATTERY;
+		vector<int> tmp = world->getPosOnMap('P');	//Get player position from map		!!!TO-DO!!! This needs to be on player class
+		if (tmp.size() > 0)
+		{
+			X = tmp[0];
+			Y = tmp[1];
+		}
+		else
+		{
+			X = 0;
+			Y = 0;
+		}
+
+		world->addCharacter(this);					//Add player to world
 	}
 	void print_info()
 	{
@@ -459,6 +287,7 @@ public:
 			X = ePos[0];
 			Y = ePos[1];
 		}
+		world->addCharacter(this);							//Add player to world
 	}
 
 	void giveDamage()
@@ -497,6 +326,7 @@ public:
 			X = ePos[0];
 			Y = ePos[1];
 		}
+		world->addCharacter(this);							//Add player to world
 	}
 	void moveEnemy(vector<int> pos)							//Move enemy
 	{
@@ -520,11 +350,11 @@ public:
 
 		uniform_int_distribution<> distr(-1, 1);			//Set distribution either -1 or 1
 		int rndVal = distr(gen);							//Randomize either -1 or 1
-		if (rndVal == 0) 
+		if (rndVal == 0)
 		{
 			vector<int> pos;
 			pos.push_back(X);
-			pos.push_back(Y);		
+			pos.push_back(Y);
 			return pos;										//If 0, set to 1
 		}
 
@@ -559,10 +389,235 @@ public:
 	}
 };
 
+/****************************************************************
+*
+* World METHOD DEFINITIONS
+*
+* ****************************************************************/
 
+void World::addCharacter(Character* character)			//Add character to vector
+{
+	characters.push_back(character);
+}
 
+Character* World::getCharacter(int x, int y)			//Get character from vector
+{
+	for (auto c : characters)
+	{
+		if (c->X == x && c->Y == y)				//Check if character is at position
+		{
+			return c;							//Return character
+		}
+	}
+	return nullptr;								//Return nullptr if not found
+}
 
+World::World()
+{
+	loadWorld();
+	discoveredMask = getMask();
+}
+void World::printWorld()
+{
+	cout << "World info: " << endl;
+	cout << "Map size: [" << map_rows << "," << map_cols << "]" << endl;
+}
+void World::loadWorld()
+{
+	map = load_level(map_rows, map_cols);
+}
+vector<int> World::randEnemy(char chr)					//Get player position as vector
+{
+	random_device erd;							//Create enemy random device generator
+	mt19937 gen(erd());
+	uniform_int_distribution<int> distX(0, map_cols - 1);	//Set distribution for X position
+	uniform_int_distribution<int> distY(0, map_rows - 1);	//Set distribution for Y position
 
+	int c = 0;
+	while (c < 50)								//Try 50 times find empty position
+	{
+		int x = distX(gen);						//Randomize X position
+		int y = distY(gen);						//Randomize Y position
+		if (map[y][x] == 'o')					//If empty space found
+		{
+			map[y][x] = chr;					//Set enemy to the map
+			vector<int> pos;
+			pos.push_back(x);
+			pos.push_back(y);
+			return pos;
+		}
+		c++;
+	}
+	vector<int> zeroVector = { -1, -1 };		//Return -1,-1 if not found	
+	return zeroVector;
+}
+
+vector<int> World::getPosOnMap(char chr)				//Get player position as vector
+{
+	for (int i = 0; i < map_rows; ++i)
+	{
+		for (int j = 0; j < map_cols; ++j)
+		{
+			if (map[i][j] == chr)				//Find player position
+			{
+				vector<int> pos;
+				pos.push_back(j);
+				pos.push_back(i);
+				return pos;
+			}
+		}
+	}
+	vector<int> zeroVector = { -1, -1 };			//Return -1,-1 if not found	
+	return zeroVector;
+}
+
+bool World::canMove(vector<int> pos)						//Check if player can move to new position
+{
+	if (pos[0] < 0 || pos[0] >= map_cols || pos[1] < 0 || pos[1] >= map_rows) return false;	//Check if within map boundaries
+	if (map[pos[1]][pos[0]] == 'x') return false;	//Check if wall element
+	if (map[pos[1]][pos[0]] == 'm')					//Check if enemy 'm' element
+	{
+		discoveredMask[pos[1]][pos[0]] = true;		//Set discovered mask to true for enemy position
+		return false;
+	}
+	if (map[pos[1]][pos[0]] == 'M')					//Check if enemy 'M' element
+	{
+		discoveredMask[pos[1]][pos[0]] = true;		//Set discovered mask to true for enemy position
+		return false;
+	}
+
+	if (map[pos[1]][pos[0]] == 'P') return false;	//Check if player element
+
+	return true;
+}
+
+vector<int> World::affectDamage(vector<int> pos)		//Check what is in position, affect damage to who is at position
+{
+	Character* target = getCharacter(pos[0], pos[1]);	//Get character at position
+	if (target != nullptr)
+	{
+		target->health_decrease(25);			//Give damage to character
+		return pos;								//Return position
+	}
+	return { -1, -1 };							//Return -1,-1 if no one found from coordinates
+	/*
+			vector<int> damageTo;
+			if (map[pos[1]][pos[0]] == 'm')				//If enemy 'm' found
+			{
+				enemyStat->giveDamage();				//Give damage to enemy		***Not working for some reason***
+
+				damageTo = pos;
+				return damageTo;
+			}
+			else if (map[pos[1]][pos[0]] == 'M')		//If enemy 'M' found
+			{
+	//			enemyMov->giveDamage();					//Give damage to enemy			***Not working for some reason***
+				damageTo = pos;
+				return damageTo;
+			}
+			else if (map[pos[1]][pos[0]] == 'P')		//If player found
+			{
+	//			player->takeDamage(10);					//Give damage to player			***Not working for some reason***
+				damageTo = pos;
+				return damageTo;
+			}
+	*/
+}
+
+void World::freeLevel(int rows)						//*************Fix this to use map_rows !!!!!!******************??????	
+{
+	if (!map) return;
+	for (int i = 0; i < rows; ++i)
+	{
+		delete[] map[i];
+	}
+	delete[] map;
+
+	if (!discoveredMask) return;
+	for (int i = 0; i < rows; ++i)
+	{
+		delete[] discoveredMask[i];
+	}
+	delete[] discoveredMask;
+}
+
+void World::printLevel(int rows, int cols)
+{
+	if (!map || !discoveredMask) return;
+	//		for (int i = 0; i < rows; ++i)
+	for (int i = 0; i < map_rows; ++i)			//Print map
+	{
+		for (int j = 0; j < map_cols; ++j)
+		{
+			if (discoveredMask[i][j])
+			{
+				cout << map[i][j];				//Print discovered elements
+			}
+			else
+			{
+				cout << ' ';					//Print undiscovered elements
+			}
+		}
+		cout << endl;
+	}
+
+}
+bool** World::getMask()
+{
+	discoveredMask = new bool* [map_rows];
+	for (int i = 0; i < map_rows; ++i)								//Initialize shadowMap
+	{
+		discoveredMask[i] = new bool[map_cols];
+		for (int j = 0; j < map_cols; ++j)
+		{
+			//				discoveredMask[i][j] = false;							//Initialize all values to false
+			discoveredMask[i][j] = true;				//***FOR DEBUGGING->MAP VISIBLE***//
+		}
+	}
+
+	for (int i = 0; i < map_rows; ++i)								//Initialize discoveredMask
+	{
+		for (int j = 0; j < map_cols; ++j)
+		{
+			if (map[i][j] == 'x') discoveredMask[i][j] = true;		//Set wall elements to true
+		}
+	}
+	vector<int> pPos = getPosOnMap('P');							//Get player position
+	if (pPos[0] == -1 || pPos[1] == -1)
+	{
+		cout << "Player location returned negative value!" << endl;
+		return nullptr;
+	}
+	else
+	{
+		discoveredMask[pPos[1]][pPos[0]] = true;					//Set player position to true
+	}
+
+	return discoveredMask;
+}
+void World::expandMask(int x = 0, int y = 0)
+{
+	vector<int> pPos = getPosOnMap('P');									//Get player position
+	x += pPos[0];															//Add player position to x if flashlight is used
+	y += pPos[1];															//Add player position to y if flashlight is used
+
+	if (x < 0 || x >= map_cols || y < 0 || y >= map_rows) return;			//Check if within map boundaries
+
+	discoveredMask[y][x] = true;											//Light next char
+}
+World::~World()
+{
+	if (map) freeLevel(map_rows);									//Free map memory
+	if (discoveredMask)												//Free discovered mask memory
+	{
+		for (int i = 0; i < map_rows; ++i)
+		{
+			delete[] discoveredMask[i];
+		}
+		delete[] discoveredMask;
+	}
+	cout << "World is destroyed!" << endl;
+}
 
 /****************************************************************
  *
@@ -572,10 +627,10 @@ public:
  ****************************************************/
 int main(void)
 {
-start_splash_screen();
-startup_routines(); // do any necessary startup routines, such as loading level map
-char input;
-int rows = 0, cols = 0;	
+	start_splash_screen();
+	startup_routines(); // do any necessary startup routines, such as loading level map
+	char input;
+	int rows = 0, cols = 0;
 
 	// IMPORTANT NOTE: do not exit program without cleanup: freeing allocated dynamic memory etc
 	while (true) // infinite loop, should end with "break" in case of game over or user quitting etc.
@@ -584,7 +639,7 @@ int rows = 0, cols = 0;
 		if (0 > read_input(&input)) break; // exit loop in case input reader returns negative (e.g. user selected "quit")
 		update_state(input);
 		render_screen();
-		
+
 	}
 	if (input == -3)
 	{
@@ -617,7 +672,7 @@ char** load_level(int& rows, int& cols)
 		cout << "Enter file path: ";
 		getline(cin, filepath);
 	}
-	
+
 	//Open file on location filepath
 	ifstream file(filepath);
 	if (!file)												//If file not found, error message
@@ -657,23 +712,23 @@ char** load_level(int& rows, int& cols)
 		size_t pos = tempMap[i].find('P');
 		if (pos != string::npos)
 		{
-//			player->X = static_cast<int>(pos);
-//			player->Y = i;
+			//			player->X = static_cast<int>(pos);
+			//			player->Y = i;
 		}
 	}
 	map_rows = rows;
 	map_cols = cols;
-/*
-	if (player->X < 0 || player->Y < 0)
-	{
-		cout << "Player not located in a map.";
-	}
-	else
-	{
-		cout << "Player location [" << player->X << "," << player->Y <<"]"<< endl;
-	}
-*/
-//	printLevel(rows, cols);
+	/*
+		if (player->X < 0 || player->Y < 0)
+		{
+			cout << "Player not located in a map.";
+		}
+		else
+		{
+			cout << "Player location [" << player->X << "," << player->Y <<"]"<< endl;
+		}
+	*/
+	//	printLevel(rows, cols);
 
 	return map;
 
@@ -735,7 +790,7 @@ void update_state(char input)
 
 	if (input == 'm' || input == 'M')
 	{
-//		map = load_level(filepath, rows, cols);
+		//		map = load_level(filepath, rows, cols);
 		world->loadWorld();
 	}
 
@@ -752,7 +807,7 @@ void update_state(char input)
 		break;
 	case 'h': Information();				//Print help information how to play
 		break;
-	case 'r': 
+	case 'r':
 		Restart();							//Restart game
 		newX = player1->X;
 		newY = player1->Y;
@@ -768,7 +823,7 @@ void update_state(char input)
 	default:
 		return;
 	}
-	
+
 	if (newX != player1->X || newY != player1->Y)				//If player is trying to move
 	{
 		if (newX >= 0 && newX < map_cols && newY >= 0 && newY < map_rows)
@@ -778,13 +833,13 @@ void update_state(char input)
 			{
 				//Player can and will move
 				player1->move(newX, newY);					//Move player
-/*
-				world->map[player->Y][player->X] = 'o';		//Update old position to free pos
-				player->X = newX;
-				player->Y = newY;
-				world->map[player->Y][player->X] = 'P';		//Set net player position
-				world->expandMask(dx, dy);					//Expand discovered mask
-*/
+				/*
+								world->map[player->Y][player->X] = 'o';		//Update old position to free pos
+								player->X = newX;
+								player->Y = newY;
+								world->map[player->Y][player->X] = 'P';		//Set net player position
+								world->expandMask(dx, dy);					//Expand discovered mask
+				*/
 			}
 			else
 			{
@@ -802,7 +857,7 @@ void update_state(char input)
 	if (dy != 0 || dx != 0)									//Player is using flashlight function
 	{
 		player1->flashlight(dx, dy);							//Player use flashlight
-//		world->expandMask(dx, dy);							//Expand discovered mask
+		//		world->expandMask(dx, dy);							//Expand discovered mask
 
 		vector<int> enemyPos = world->getPosOnMap('M');		//Get enemy position
 		enemyMov->moveEnemy(enemyPos);						//Move enemy (if active)
@@ -815,7 +870,7 @@ void Restart()
 	map_cols = 0;
 	//Reload level
 	world->loadWorld();
-//	map = load_level(filepath, map_rows, map_cols);
+	//	map = load_level(filepath, map_rows, map_cols);
 	player1->health = MAX_HEALTH;
 	player1->oxygen = MAX_OXYGEN;
 	player1->lives = INIT_LIVES;
@@ -824,7 +879,7 @@ void Restart()
 void Information()
 {
 	cout << endl << "Holy Diver - an epic adventure at object-oriented world way beneath the surface!" << endl;
-	cout << endl <<"Movement:" << endl;
+	cout << endl << "Movement:" << endl;
 	cout << "w - up" << endl;
 	cout << "a - left" << endl;
 	cout << "s - down" << endl;
@@ -929,3 +984,4 @@ void quit_routines(void)
 
 	cout << endl << "BYE! Welcome back soon." << endl;
 }
+
